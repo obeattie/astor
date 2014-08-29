@@ -114,7 +114,7 @@ func (i *inspectorImpl) Inspect(node ast.Node) ast.Node {
 		if n.Type != nil {
 			n.Type = ii.Inspect(n.Type).(ast.Expr)
 		}
-		n.Elts = inspectExprList(i, n.Elts)
+		n.Elts = inspectExprList(ii, n.Elts)
 
 	case *ast.ParenExpr:
 		n.X = ii.Inspect(n.X).(ast.Expr)
@@ -147,7 +147,7 @@ func (i *inspectorImpl) Inspect(node ast.Node) ast.Node {
 
 	case *ast.CallExpr:
 		n.Fun = ii.Inspect(n.Fun).(ast.Expr)
-		n.Args = inspectExprList(i, n.Args)
+		n.Args = inspectExprList(ii, n.Args)
 
 	case *ast.StarExpr:
 		n.X = ii.Inspect(n.X).(ast.Expr)
@@ -216,8 +216,8 @@ func (i *inspectorImpl) Inspect(node ast.Node) ast.Node {
 		n.X = ii.Inspect(n.X).(ast.Expr)
 
 	case *ast.AssignStmt:
-		n.Lhs = inspectExprList(i, n.Lhs)
-		n.Rhs = inspectExprList(i, n.Rhs)
+		n.Lhs = inspectExprList(ii, n.Lhs)
+		n.Rhs = inspectExprList(ii, n.Rhs)
 
 	case *ast.GoStmt:
 		n.Call = ii.Inspect(n.Call).(*ast.CallExpr)
@@ -226,7 +226,7 @@ func (i *inspectorImpl) Inspect(node ast.Node) ast.Node {
 		n.Call = ii.Inspect(n.Call).(*ast.CallExpr)
 
 	case *ast.ReturnStmt:
-		n.Results = inspectExprList(i, n.Results)
+		n.Results = inspectExprList(ii, n.Results)
 
 	case *ast.BranchStmt:
 		if n.Label != nil {
@@ -234,7 +234,7 @@ func (i *inspectorImpl) Inspect(node ast.Node) ast.Node {
 		}
 
 	case *ast.BlockStmt:
-		n.List = inspectStmtList(i, n.List)
+		n.List = inspectStmtList(ii, n.List)
 
 	case *ast.IfStmt:
 		if n.Init != nil {
@@ -247,8 +247,8 @@ func (i *inspectorImpl) Inspect(node ast.Node) ast.Node {
 		}
 
 	case *ast.CaseClause:
-		n.List = inspectExprList(i, n.List)
-		n.Body = inspectStmtList(i, n.Body)
+		n.List = inspectExprList(ii, n.List)
+		n.Body = inspectStmtList(ii, n.Body)
 
 	case *ast.SwitchStmt:
 		if n.Init != nil {
@@ -270,7 +270,7 @@ func (i *inspectorImpl) Inspect(node ast.Node) ast.Node {
 		if n.Comm != nil {
 			n.Comm = ii.Inspect(n.Comm).(ast.Stmt)
 		}
-		n.Body = inspectStmtList(i, n.Body)
+		n.Body = inspectStmtList(ii, n.Body)
 
 	case *ast.SelectStmt:
 		n.Body = ii.Inspect(n.Body).(*ast.BlockStmt)
@@ -318,7 +318,7 @@ func (i *inspectorImpl) Inspect(node ast.Node) ast.Node {
 		if n.Type != nil {
 			n.Type = ii.Inspect(n.Type).(ast.Expr)
 		}
-		n.Values = inspectExprList(i, n.Values)
+		n.Values = inspectExprList(ii, n.Values)
 		if n.Comment != nil {
 			n.Comment = ii.Inspect(n.Comment).(*ast.CommentGroup)
 		}
@@ -363,7 +363,7 @@ func (i *inspectorImpl) Inspect(node ast.Node) ast.Node {
 			n.Doc = ii.Inspect(n.Doc).(*ast.CommentGroup)
 		}
 		n.Name = ii.Inspect(n.Name).(*ast.Ident)
-		n.Decls = inspectDeclList(i, n.Decls)
+		n.Decls = inspectDeclList(ii, n.Decls)
 		// don't inspect n.Comments - they have been
 		// visited already through the individual
 		// nodes
@@ -385,33 +385,29 @@ func (i *inspectorImpl) Inspect(node ast.Node) ast.Node {
 // Helper functions for common node lists. They may be empty. Copied/adapted shamelessly from go/ast.
 
 func inspectIdentList(i Inspector, list []*ast.Ident) []*ast.Ident {
-	newList := make([]*ast.Ident, len(list))
 	for l, x := range list {
-		newList[l] = i.Inspect(x).(*ast.Ident)
+		list[l] = i.Inspect(x).(*ast.Ident)
 	}
-	return newList
+	return list
 }
 
 func inspectExprList(i Inspector, list []ast.Expr) []ast.Expr {
-	newList := make([]ast.Expr, len(list))
 	for l, x := range list {
-		newList[l] = i.Inspect(x).(ast.Expr)
+		list[l] = i.Inspect(x).(ast.Expr)
 	}
-	return newList
+	return list
 }
 
 func inspectStmtList(i Inspector, list []ast.Stmt) []ast.Stmt {
-	newList := make([]ast.Stmt, len(list))
 	for l, x := range list {
-		newList[l] = i.Inspect(x).(ast.Stmt)
+		list[l] = i.Inspect(x).(ast.Stmt)
 	}
-	return newList
+	return list
 }
 
 func inspectDeclList(i Inspector, list []ast.Decl) []ast.Decl {
-	newList := make([]ast.Decl, len(list))
 	for l, x := range list {
-		newList[l] = i.Inspect(x).(ast.Decl)
+		list[l] = i.Inspect(x).(ast.Decl)
 	}
-	return newList
+	return list
 }

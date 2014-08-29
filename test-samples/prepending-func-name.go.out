@@ -1,5 +1,7 @@
 package foo
 
 func FooBar() {
-
+	if len("a") != 0 {
+		return
+	}
 }
