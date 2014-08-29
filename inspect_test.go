@@ -8,6 +8,7 @@ import (
 	"go/parser"
 	"go/token"
 	"io/ioutil"
+
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,28 +16,19 @@ import (
 
 const parserFlags = parser.ParseComments | parser.AllErrors
 
-func TestPrependingFuncName(t *testing.T) {
+func runInspector(t *testing.T, infile, outfile string, visitor Visitor) {
 	var err error
 	var inputSrc []byte
 	var expectedOut []byte
 
-	inputSrc, err = ioutil.ReadFile("test-samples/prepending-func-name.in.go")
+	inputSrc, err = ioutil.ReadFile(infile)
 	assert.NoError(t, err, "Error reading input")
-	expectedOut, err = ioutil.ReadFile("test-samples/prepending-func-name.out.go")
+	expectedOut, err = ioutil.ReadFile(outfile)
 	assert.NoError(t, err, "Error reading expected output")
 
 	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, "prepending-func-name.go", inputSrc, parserFlags)
+	f, err := parser.ParseFile(fset, infile, inputSrc, parserFlags)
 	assert.NoError(t, err, "Error parsing input")
-
-	visitor := func(i Inspector, n ast.Node) bool {
-		if n, ok := n.(*ast.FuncDecl); ok {
-			n.Name = ast.NewIdent(fmt.Sprintf("Foo%s", n.Name.String()))
-			i.Replace(n)
-		}
-
-		return true
-	}
 
 	inspector := NewInspector(visitor)
 	result := inspector.Inspect(f)
@@ -45,4 +37,43 @@ func TestPrependingFuncName(t *testing.T) {
 	err = format.Node(actualOutBuf, fset, result)
 	assert.NoError(t, err, "Error formatting output AST")
 	assert.Equal(t, string(expectedOut), actualOutBuf.String(), "Expected output doesn't match actual output")
+}
+
+func TestPrependingFuncName(t *testing.T) {
+	visitor := func(i Inspector, n ast.Node) bool {
+		if n, ok := n.(*ast.FuncDecl); ok {
+			n.Name = ast.NewIdent(fmt.Sprintf("Foo%s", n.Name.String()))
+			i.Replace(n)
+			return false
+		}
+
+		return true
+	}
+
+	runInspector(
+		t,
+		"test-samples/prepending-func-name.go.in",
+		"test-samples/prepending-func-name.go.out",
+		visitor)
+}
+
+func TestChangePointerToInterface(t *testing.T) {
+	visitor := func(i Inspector, n ast.Node) bool {
+		if _, ok := n.(*ast.StarExpr); ok {
+			newNode := &ast.SelectorExpr{
+				X:   ast.NewIdent("pkg"),
+				Sel: ast.NewIdent("InterfaceName"),
+			}
+			i.Replace(newNode)
+			return false
+		}
+
+		return true
+	}
+
+	runInspector(
+		t,
+		"test-samples/pointer-to-interface.go.in",
+		"test-samples/pointer-to-interface.go.out",
+		visitor)
 }

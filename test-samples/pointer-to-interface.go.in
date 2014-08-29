@@ -1,0 +1,8 @@
+package foo
+
+type a map[*pkg.PointerName]*pkg.PointerName
+type b *pkg.PointerName
+
+func Test(c *pkg.PointerName) (*pkg.PointerName, *pkg.PointerName) {
+	return c, c
+}

@@ -1,0 +1,8 @@
+package foo
+
+type a map[pkg.InterfaceName]pkg.InterfaceName
+type b pkg.InterfaceName
+
+func Test(c pkg.InterfaceName,) (pkg.InterfaceName, pkg.InterfaceName,) {
+	return c, c
+}
